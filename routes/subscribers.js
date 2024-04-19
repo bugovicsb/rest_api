@@ -33,13 +33,28 @@ router.post("/", async (req, res) => {
 });
 
 // update
-router.patch("/:id", getSubscriber, (req, res) => {});
+router.patch("/:id", getSubscriber, async (req, res) => {
+    if (req.body.name !== undefined) {
+        res.subscriber.name = req.body.name;
+    }
+
+    if (req.body.subscribeToChannel !== undefined) {
+        res.subscriber.subscribeToChannel = req.body.subscribeToChannel;
+    }
+
+    try {
+        const updatedSubscriber = await res.subscriber.save();
+        res.json(updatedSubscriber);
+    } catch (err) {
+        res.status(400).json({ message: err.message });
+    }
+});
 
 // delete
 router.delete("/:id", getSubscriber, async (req, res) => {
     try {
         await res.subscriber.deleteOne();
-        res.json({message: `Deleted subscriber: ${res.subscriber.name}`})
+        res.json({ message: `Deleted subscriber: ${res.subscriber.name}` });
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -50,7 +65,7 @@ async function getSubscriber(req, res, next) {
     try {
         subscriber = await Subscriber.findById(req.params.id);
         if (subscriber === null) {
-            return res.status(404).json({message: 'Cannot find subscriber'});
+            return res.status(404).json({ message: "Cannot find subscriber" });
         }
     } catch (err) {
         return res.status(500).json({ message: err.message });
